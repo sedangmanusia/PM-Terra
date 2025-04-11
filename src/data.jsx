@@ -17,6 +17,11 @@ export const blogData = [
       date: 'Nov 10, 2023',
       image: 'https://i.pinimg.com/474x/21/04/6e/21046eb75c410bdae1c13c772b83a910.jpg',
     },
+    {
+      title: 'Sosialisasi Pembuatan Kompos Sampah Organik',
+      date: 'Nov 10, 2023',
+      image: 'https://i.pinimg.com/736x/a4/05/6c/a4056c10650fc5aa930fa29cb0522ba7.jpg',
+    },
   ];
   
   export const productData = [
@@ -42,3 +47,13 @@ export const blogData = [
     { id: '3', title: 'Toko', icon: <Shop size={24} color={colors.white()} /> },
     { id: '4', title: 'Komunitas', icon: <Message size={24} color={colors.white()} /> },
   ];
+
+  export const ProfileData = {
+    profilePict:
+      'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80',
+    name: 'Arthur Conan Doyle',
+    createdAt: '18 Mar, 2020',
+    blogPosted: 29,
+    following: 3000,
+    follower: 3000,
+  };
