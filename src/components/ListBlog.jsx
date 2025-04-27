@@ -1,13 +1,15 @@
 import React from 'react';
-import { ScrollView, View, ImageBackground, Text, StyleSheet } from 'react-native';
+import { ScrollView, View, ImageBackground, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
 import { fontType, colors } from '../theme';
+import {useNavigation} from '@react-navigation/native';
 
 const ListBlog = ({ blogData }) => {
+  const navigation = useNavigation();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.listBlog}>
       {blogData.map((blog, index) => (
-        <View key={index} style={styles.cardItem}>
+<TouchableOpacity key={index} style={styles.cardItem} onPress={() => navigation.navigate('KomunitasDetail', {blogId: blog.id})}>
           <ImageBackground
             style={styles.cardImage}
             resizeMode="cover"
@@ -20,7 +22,7 @@ const ListBlog = ({ blogData }) => {
               </View>
             </View>
           </ImageBackground>
-        </View>
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );

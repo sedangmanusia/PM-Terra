@@ -2,25 +2,58 @@ import { Home, Category, Shop, Message } from "iconsax-react-native";
 import { fontType, colors } from './theme';
 
 export const blogData = [
-    {
-      title: 'Aksi Bersih Pantai di Tanjung Bayang',
-      date: 'Nov 10, 2023',
-      image: 'https://i.pinimg.com/474x/62/1e/7f/621e7f063c8f919a6b6b38bae402ac14.jpg',
-    },
-    {
-      title: 'Kegiatan Tanam Pohon Bersama Komunitas',
-      date: 'Nov 10, 2023',
-      image: 'https://i.pinimg.com/474x/75/76/14/757614a938d3462d1d495b48c3ba6525.jpg',
-    },
-    {
-      title: 'Edukasi Pengolahan Sampah Rumah Tangga',
-      date: 'Nov 10, 2023',
-      image: 'https://i.pinimg.com/474x/21/04/6e/21046eb75c410bdae1c13c772b83a910.jpg',
-    },
-    {
+  {
+    id: 1,
+    title: 'Aksi Bersih Pantai di Tanjung Bayang',
+    description: 'Kegiatan membersihkan area pesisir pantai bersama relawan dari berbagai komunitas peduli lingkungan.',
+    uploadDate: 'Nov 10, 2023',
+    eventDate: 'Nov 18, 2023',
+    location: 'Pantai Tanjung Bayang, Makassar',
+    quota: 100,
+    registered: 75,
+    image: 'https://i.pinimg.com/474x/62/1e/7f/621e7f063c8f919a6b6b38bae402ac14.jpg',
+    totalComments: 12,
+  },
+  {
+    id: 2,
+    title: 'Kegiatan Tanam Pohon Bersama Komunitas',
+    description: 'Penanaman pohon bersama untuk menghijaukan kembali area terbuka di sekitar Hutan Kota.',
+    uploadDate: 'Nov 10, 2023',
+    eventDate: 'Nov 25, 2023',
+    location: 'Hutan Kota, Jakarta Selatan',
+    quota: 150,
+    registered: 120,
+    image: 'https://i.pinimg.com/474x/75/76/14/757614a938d3462d1d495b48c3ba6525.jpg',
+    totalComments: 20,
+  },
+    /* {
       title: 'Sosialisasi Pembuatan Kompos Sampah Organik',
       date: 'Nov 10, 2023',
       image: 'https://i.pinimg.com/736x/a4/05/6c/a4056c10650fc5aa930fa29cb0522ba7.jpg',
+    }, */
+    {
+      id: 3,
+      title: 'Sosialisasi Pembuatan Kompos Sampah Organik',
+      description: 'Penanaman pohon bersama untuk menghijaukan kembali area terbuka di sekitar Hutan Kota.',
+      uploadDate: 'Nov 10, 2023',
+      eventDate: 'Nov 25, 2023',
+      location: 'Hutan Kota, Jakarta Selatan',
+      quota: 150,
+      registered: 120,
+      image: 'https://i.pinimg.com/736x/a4/05/6c/a4056c10650fc5aa930fa29cb0522ba7.jpg',
+      totalComments: 20,
+    },
+    {
+      id: 4,
+      title: 'Sosialisasi Pembuatan Kompos Sampah Organik',
+      description: 'Penanaman pohon bersama untuk menghijaukan kembali area terbuka di sekitar Hutan Kota.',
+      uploadDate: 'Nov 10, 2023',
+      eventDate: 'Nov 25, 2023',
+      location: 'Hutan Kota, Jakarta Selatan',
+      quota: 150,
+      registered: 120,
+      image: 'https://i.pinimg.com/736x/a4/05/6c/a4056c10650fc5aa930fa29cb0522ba7.jpg',
+      totalComments: 20,
     },
   ];
   

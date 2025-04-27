@@ -1,15 +1,17 @@
 import React from 'react';
-import { FlatList, View, Image, Text, StyleSheet } from 'react-native';
+import { FlatList, View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors } from '../theme';
 import { Box, Message } from 'iconsax-react-native';
+import {useNavigation} from '@react-navigation/native';
 
 const ProductList = ({ productData }) => {
+  const navigation = useNavigation();
   return (
     <FlatList
       data={productData}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <View style={styles.cardItem}>
+        <TouchableOpacity  style={styles.cardItem} onPress={() => navigation.navigate('BlogDetail', {blogId: item.id})}>
           <Image style={styles.cardImage} source={{ uri: item.image }} />
           <View style={styles.cardContent}>
             <View style={styles.header}>
@@ -29,7 +31,7 @@ const ProductList = ({ productData }) => {
               </View>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       )}
       contentContainerStyle={styles.flatListContainer}
     />

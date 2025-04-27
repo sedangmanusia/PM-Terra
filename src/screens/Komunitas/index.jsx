@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollView, View, ImageBackground, Text, StyleSheet, TextInput } from 'react-native';
+import { ScrollView, View, ImageBackground, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { Edit } from 'iconsax-react-native';
 import { fontType, colors } from '../../theme';
 import { blogData } from '../../data';
+import { useNavigation } from '@react-navigation/native';
 
 const ItemKomunitas = () => {
+  const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   
   const filteredData = blogData.filter(item =>
@@ -11,6 +14,7 @@ const ItemKomunitas = () => {
   );
 
   return (
+    <View style={styles.wrapper}>
     <ScrollView 
       showsVerticalScrollIndicator={false} 
       style={{backgroundColor: colors.lightGreen()}}
@@ -27,7 +31,11 @@ const ItemKomunitas = () => {
         />
       </View>
       {filteredData.map((blog, index) => (
-        <View key={index} style={styles.cardItem}>
+        <TouchableOpacity 
+          key={index} 
+          style={styles.cardItem}
+          onPress={() => navigation.navigate('DetailKomunitas', { communityId: blog.id })}
+        >
           <ImageBackground
             style={styles.cardImage}
             resizeMode="cover"
@@ -40,9 +48,15 @@ const ItemKomunitas = () => {
               </View>
             </View>
           </ImageBackground>
-        </View>
+        </TouchableOpacity>
       ))}
     </ScrollView>
+    <TouchableOpacity
+            style={styles.floatingButton}
+            onPress={() => navigation.navigate('AddKomunitasForm')}>
+            <Edit color={colors.white()} variant="Linear" size={20} />
+          </TouchableOpacity>
+    </View>
   );
 };
 
@@ -101,6 +115,26 @@ const styles = StyleSheet.create({
     color: colors.white(),
     marginTop: 5,
     fontFamily: fontType['Poppins-Regular'],
+  },
+  floatingButton: {
+    backgroundColor: colors.darkGreen(),
+    padding: 15,
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    borderRadius: 10,
+    shadowColor: colors.lightGreen(),
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+
+    elevation: 8,
+  },
+  wrapper: {
+    flex: 1,
   },
 });
 

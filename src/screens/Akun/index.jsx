@@ -1,9 +1,13 @@
 import React from 'react';
 import {View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, ImageBackground} from 'react-native';
+import { Edit } from 'iconsax-react-native';
 import {blogData} from '../../data';
 import {fontType, colors} from '../../theme';
+import {ItemSmall} from '../../components';
+import {useNavigation} from '@react-navigation/native';
 
 const Akun = () => {
+  const navigation = useNavigation();
   return (
     <ScrollView style={styles.container}>
       {/* Header Profile */}
@@ -21,7 +25,7 @@ const Akun = () => {
       </View>
 
       {/* Rekomendasi Kegiatan */}
-      <View style={styles.sectionContainer}>
+      <TouchableOpacity style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Rekomendasi Kegiatan Komunitas</Text>
         <ScrollView contentContainerStyle={styles.blogList}>
           {blogData.map((blog, index) => (
@@ -38,7 +42,7 @@ const Akun = () => {
             </View>
           ))}
         </ScrollView>
-      </View>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -124,7 +128,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.white(0.8),
     fontFamily: fontType['Poppins-Regular'],
-  },
+  },  
 });
 
 export default Akun;
