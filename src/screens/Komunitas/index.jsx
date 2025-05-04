@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, View, ImageBackground, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import {Animated, View, ImageBackground, Text, StyleSheet, TextInput, TouchableOpacity} from 'react-native';
 import { Edit } from 'iconsax-react-native';
 import { fontType, colors } from '../../theme';
 import { blogData } from '../../data';
@@ -8,19 +8,32 @@ import { useNavigation } from '@react-navigation/native';
 const ItemKomunitas = () => {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
+
+  const scrollY = React.useRef(new Animated.Value(0)).current;
+  const diffClampY = Animated.diffClamp(scrollY, 0, 142);
+
+  const opacityY = diffClampY.interpolate({
+    inputRange: [0, 60],
+    outputRange: [1, 0.4],
+    extrapolate: 'clamp',
+  });
+
+  const translateY = diffClampY.interpolate({
+    inputRange: [0, 60],
+    outputRange: [0, -20], // header akan naik 20px saat scroll
+    extrapolate: 'clamp',
+  });
   
+  
+
   const filteredData = blogData.filter(item =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <View style={styles.wrapper}>
-    <ScrollView 
-      showsVerticalScrollIndicator={false} 
-      style={{backgroundColor: colors.lightGreen()}}
-      contentContainerStyle={styles.listBlog}
-    >
-      <View style={styles.header}>
+      {/* Animated Header */}
+      <Animated.View style={[styles.header, { opacity: opacityY, transform: [{ translateY }] }]}>
         <Text style={styles.headerTitle}>Kegiatan Komunitas</Text>
         <TextInput
           style={styles.searchBar}
@@ -28,42 +41,73 @@ const ItemKomunitas = () => {
           placeholderTextColor={colors.black(0.6)}
           value={searchQuery}
           onChangeText={setSearchQuery}
-        />
-      </View>
-      {filteredData.map((blog, index) => (
-        <TouchableOpacity 
-          key={index} 
-          style={styles.cardItem}
-          onPress={() => navigation.navigate('DetailKomunitas', { communityId: blog.id })}
-        >
-          <ImageBackground
-            style={styles.cardImage}
-            resizeMode="cover"
-            imageStyle={{ borderRadius: 15 }}
-            source={{ uri: blog.image }}>
-            <View style={styles.cardContent}>
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle}>{blog.title}</Text>
-                <Text style={styles.cardText}>{blog.date}</Text>
+          />
+      </Animated.View>
+
+      {/* Scrollable Content */}
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollArea}
+        contentContainerStyle={styles.listBlog}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+      >
+        {filteredData.map((blog, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.cardItem}
+            onPress={() =>
+              navigation.navigate('DetailKomunitas', { communityId: blog.id })
+            }
+          >
+            <ImageBackground
+              style={styles.cardImage}
+              resizeMode="cover"
+              imageStyle={{ borderRadius: 15 }}
+              source={{ uri: blog.image }}
+            >
+              <View style={styles.cardContent}>
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardTitle}>{blog.title}</Text>
+                  <Text style={styles.cardText}>{blog.date}</Text>
+                </View>
               </View>
-            </View>
-          </ImageBackground>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-    <TouchableOpacity
-            style={styles.floatingButton}
-            onPress={() => navigation.navigate('AddKomunitasForm')}>
-            <Edit color={colors.white()} variant="Linear" size={20} />
+            </ImageBackground>
           </TouchableOpacity>
+        ))}
+      </Animated.ScrollView>
+
+      {/* Floating Button */}
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('AddKomunitasForm')}
+      >
+        <Edit color={colors.white()} variant="Linear" size={20} />
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: colors.lightGreen(),
+  },
+  scrollArea: {
+    paddingTop: 142, // agar konten tidak tertutup header
+  },
   header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     padding: 20,
     paddingBottom: 10,
+    backgroundColor: colors.lightGreen(),
+    zIndex: 10,
   },
   headerTitle: {
     fontSize: 24,
@@ -79,13 +123,9 @@ const styles = StyleSheet.create({
     fontFamily: fontType['Poppins-Regular'],
   },
   listBlog: {
-    paddingVertical: 10,
+    paddingBottom: 20,
     paddingHorizontal: 15,
     gap: 20,
-    backgroundColor: colors.lightGreen(),
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 20,
   },
   cardItem: {
     width: '100%',
@@ -100,7 +140,7 @@ const styles = StyleSheet.create({
     padding: 15,
     height: '100%',
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.3)', // opsional agar teks lebih terbaca
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   cardInfo: {
     justifyContent: 'flex-end',
@@ -108,7 +148,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     color: colors.white(),
-    fontFamily: fontType['Poppins-Bold'], // opsional jika pakai font custom
+    fontFamily: fontType['Poppins-Bold'],
   },
   cardText: {
     fontSize: 10,
@@ -130,11 +170,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
-
     elevation: 8,
-  },
-  wrapper: {
-    flex: 1,
   },
 });
 

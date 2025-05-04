@@ -55,6 +55,18 @@ export const blogData = [
       image: 'https://i.pinimg.com/736x/a4/05/6c/a4056c10650fc5aa930fa29cb0522ba7.jpg',
       totalComments: 20,
     },
+    {
+      id: 5,
+      title: 'Sosialisasi Pembuatan Kompos Sampah Organik',
+      description: 'Penanaman pohon bersama untuk menghijaukan kembali area terbuka di sekitar Hutan Kota.',
+      uploadDate: 'Nov 10, 2023',
+      eventDate: 'Nov 25, 2023',
+      location: 'Hutan Kota, Jakarta Selatan',
+      quota: 150,
+      registered: 120,
+      image: 'https://i.pinimg.com/736x/a4/05/6c/a4056c10650fc5aa930fa29cb0522ba7.jpg',
+      totalComments: 20,
+    },
   ];
   
   export const productData = [
