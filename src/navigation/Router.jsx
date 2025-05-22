@@ -1,7 +1,7 @@
 import React from 'react';
 import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {Home, Akun, ItemKomunitas, DetailKomunitas, AddKomunitasForm} from '../screens';
+import {Home, Akun, ItemKomunitas, DetailKomunitas, AddKomunitasForm, EditKomunitasForm} from '../screens';
 import {Home2,Bag2,People,Shop,ProfileCircle,} from 'iconsax-react-native';
 import {fontType, colors} from '../theme';
 
@@ -144,6 +144,19 @@ const Router = () => {
       <Stack.Screen
         name="AddKomunitasForm"
         component={AddKomunitasForm}
+        options={{
+          headerShown: false,
+          animationEnabled: true,
+          animationTypeForReplace: 'pop',
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+          ...TransitionPresets.SlideFromRightIOS,
+        }}
+      />
+
+      <Stack.Screen
+        name="EditKomunitas"
+        component={EditKomunitasForm}
         options={{
           headerShown: false,
           animationEnabled: true,

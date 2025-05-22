@@ -1,10 +1,13 @@
 import React, {useState} from 'react';
-import {View,Text,TextInput,TouchableOpacity,StyleSheet,ScrollView,} from 'react-native';
+import {View,Text,TextInput,TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Image, Alert} from 'react-native';
 import {ArrowLeft} from 'iconsax-react-native';
 import {useNavigation} from '@react-navigation/native';
 import {fontType, colors} from '../../theme';
+import axios from 'axios';
+import {launchImageLibrary} from 'react-native-image-picker';
 
 const AddKomunitasForm = () => {
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
   const [formData, setFormData] = useState({
@@ -14,8 +17,14 @@ const AddKomunitasForm = () => {
     eventDate: '',
     location: '',
     quota: '',
-    image: '',
+    registered: 0,
+    category: {},
+    totalLikes: 0,
+    totalComments: 0,
+    content: '',
   });
+
+  const [image, setImage] = useState(null);
 
   const handleChange = (key, value) => {
     setFormData({
@@ -24,9 +33,58 @@ const AddKomunitasForm = () => {
     });
   };
 
-  const handleUpload = () => {
-    console.log('Data yang akan diupload:', formData);
-    // Tambahkan logika simpan ke database atau navigasi di sini
+  const selectImage = () => {
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        quality: 1,
+      },
+      response => {
+        if (response.didCancel) {
+          console.log('User cancelled image picker');
+        } else if (response.errorCode) {
+          Alert.alert('Error', response.errorMessage);
+        } else {
+          const uri = response.assets && response.assets[0].uri;
+          setImage(uri);
+        }
+      },
+    );
+  };
+
+  const handleUpload = async () => {
+    setLoading(true);
+    try {
+      // gunakan metode POST untuk menambahkan blog baru
+      const response = await axios.post(
+        'https://682405e465ba058033989a69.mockapi.io/api/detail_komunitas',
+        {
+          title: formData.title,
+          description: formData.description,
+          uploadDate: formData.uploadDate,
+          eventDate: formData.eventDate,
+          location: formData.location,
+          quota: Number(formData.quota),
+          registered: Number(formData.registered),
+          category: formData.category,
+          image,
+          content: formData.content,
+          totalComments: formData.totalComments,
+          totalLikes: formData.totalLikes,
+          createdAt: new Date(),
+        },
+      );
+      // jika status response 201 (Created) "Sukses"
+      if (response.status == 201) {
+        // kembali ke layar sebelumnya (Profile)
+        navigation.goBack();
+      }
+    } catch (e) {
+      // tampilkan error
+      Alert.alert('Gagal Mengunggah Blog', `Status: ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -110,14 +168,22 @@ const AddKomunitasForm = () => {
           />
         </View>
 
-        <View style={input.borderDashed}>
-          <TextInput
-            placeholder="Gambar (URL gambar)"
-            value={formData.image}
-            onChangeText={text => handleChange('image', text)}
-            placeholderTextColor={colors.grey(0.6)}
-            style={input.text}
-          />
+        <View style={[input.borderDashed, {alignItems: 'center'}]}>
+          {image ? (
+            <Image
+              source={{uri: image}}
+              style={{width: 200, height: 200, marginBottom: 10}}
+            />
+          ) : (
+            <Text style={{color: colors.grey(0.6), marginBottom: 10}}>
+              No image selected
+            </Text>
+          )}
+          <TouchableOpacity
+            style={[styles.button, {paddingHorizontal: 30}]}
+            onPress={selectImage}>
+            <Text style={styles.buttonLabel}>Upload Image</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -127,6 +193,11 @@ const AddKomunitasForm = () => {
           <Text style={styles.buttonLabel}>Upload</Text>
         </TouchableOpacity>
       </View>
+      <Modal visible={loading} animationType="none" transparent>
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.blue()} />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -175,6 +246,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fontType['Pjs-SemiBold'],
     color: colors.white(),
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: colors.black(0.4),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

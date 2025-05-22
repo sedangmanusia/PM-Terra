@@ -1,12 +1,52 @@
-import React, { useState } from 'react';
-import {Animated, View, ImageBackground, Text, StyleSheet, TextInput, TouchableOpacity} from 'react-native';
-import { Edit } from 'iconsax-react-native';
+import React, { useState, useCallback} from 'react';
+import {Animated, View, ImageBackground, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl} from 'react-native';
+import { Edit, Setting2} from 'iconsax-react-native';
 import { fontType, colors } from '../../theme';
 import { blogData } from '../../data';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import {formatNumber} from '../../utils/formatNumber';
+import axios from 'axios';
 
 const ItemKomunitas = () => {
   const navigation = useNavigation();
+
+  // status untuk menandakan apakah terjadi loading/tidak
+  const [loading, setLoading] = useState(true);
+  // state blod data untuk menyimpan list (array) dari blog
+  const [blogData, setBlogData] = useState([]);
+  // status untuk menyimpan status refreshing
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const getDataBlog = async () => {
+    try {
+      // ambil data dari API dengan metode GET
+      const response = await axios.get(
+        'https://682405e465ba058033989a69.mockapi.io/api/detail_komunitas',
+      );
+      // atur state blogData sesuai dengan data yang
+      // di dapatkan dari API
+      setBlogData(response.data);
+      // atur loading menjadi false
+      setLoading(false)
+    } catch (error) {
+        console.error(error);
+    }
+  };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      getDataBlog()
+      setRefreshing(false);
+    }, 1500);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getDataBlog();
+    }, [])
+  );
+
   const [searchQuery, setSearchQuery] = useState('');
 
   const scrollY = React.useRef(new Animated.Value(0)).current;
