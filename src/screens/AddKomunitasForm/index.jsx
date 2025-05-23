@@ -1,12 +1,36 @@
 import React, {useState} from 'react';
 import {View,Text,TextInput,TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Image, Alert} from 'react-native';
-import {ArrowLeft} from 'iconsax-react-native';
+import FastImage from '@d11/react-native-fast-image';
+import {ArrowLeft, AddSquare, Add} from 'iconsax-react-native';
 import {useNavigation} from '@react-navigation/native';
 import {fontType, colors} from '../../theme';
-import axios from 'axios';
-import {launchImageLibrary} from 'react-native-image-picker';
+import ImagePicker from 'react-native-image-crop-picker';
+import { addDoc, collection, getFirestore } from '@react-native-firebase/firestore';
+
+// Sample dataCategory array for category options
+const dataCategory = [
+  { id: '1', name: 'Education' },
+  { id: '2', name: 'Health' },
+  { id: '3', name: 'Environment' },
+  { id: '4', name: 'Technology' },
+];
 
 const AddKomunitasForm = () => {
+  const handleImagePick = async () => {
+    ImagePicker.openPicker({
+      width: 1920,
+      height: 1080,
+      cropping: true,
+    })
+      .then(image => {
+        console.log(image);
+        setImage(image.path);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
@@ -17,11 +41,6 @@ const AddKomunitasForm = () => {
     eventDate: '',
     location: '',
     quota: '',
-    registered: 0,
-    category: {},
-    totalLikes: 0,
-    totalComments: 0,
-    content: '',
   });
 
   const [image, setImage] = useState(null);
@@ -53,43 +72,54 @@ const AddKomunitasForm = () => {
   };
 
   const handleUpload = async () => {
+    let filename = image.substring(image.lastIndexOf('/') + 1);
+    const extension = filename.split('.').pop();
+    const name = filename.split('.').slice(0, -1).join('.');
+    filename = name + Date.now() + '.' + extension;
+
     setLoading(true);
     try {
-      // gunakan metode POST untuk menambahkan blog baru
-      const response = await axios.post(
-        'https://682405e465ba058033989a69.mockapi.io/api/detail_komunitas',
-        {
-          title: formData.title,
-          description: formData.description,
-          uploadDate: formData.uploadDate,
-          eventDate: formData.eventDate,
-          location: formData.location,
-          quota: Number(formData.quota),
-          registered: Number(formData.registered),
-          category: formData.category,
-          image,
-          content: formData.content,
-          totalComments: formData.totalComments,
-          totalLikes: formData.totalLikes,
-          createdAt: new Date(),
-        },
-      );
-      // jika status response 201 (Created) "Sukses"
-      if (response.status == 201) {
-        // kembali ke layar sebelumnya (Profile)
-        navigation.goBack();
+      const imageFormData = new FormData();
+      imageFormData.append('file', {
+        uri: image,
+        type: `image/${extension}`, // or 'image/png'
+        name: filename,
+      });
+
+      const result = await fetch('https://backend-file-praktikum.vercel.app/upload/', {
+        method: 'POST',
+        body: imageFormData,
+      });
+      if (result.status !== 200) {
+        throw new Error("failed to upload image");
       }
-    } catch (e) {
-      // tampilkan error
-      Alert.alert('Gagal Mengunggah Blog', `Status: ${e.message}`);
-    } finally {
+
+      const { url } = await result.json();
+
+      const db = getFirestore();
+      const komunitasRef = collection(db, 'komunitas');
+      await addDoc(komunitasRef, {
+        title: formData.title,
+        description: formData.description,
+        uploadDate: formData.uploadDate,
+        eventDate: formData.eventDate,
+        location: formData.location,
+        quota: Number(formData.quota),
+        image: url,
+        createdAt: new Date(),
+      });
+
       setLoading(false);
+      console.log('Kegiatan Komunitas Ditambahkan!');
+      navigation.goBack();
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ArrowLeft color={colors.black()} variant="Linear" size={24} />
@@ -98,8 +128,6 @@ const AddKomunitasForm = () => {
           <Text style={styles.title}>Tambah Kegiatan</Text>
         </View>
       </View>
-
-      {/* Form Input */}
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 24,
@@ -108,17 +136,17 @@ const AddKomunitasForm = () => {
         }}>
         <View style={input.borderDashed}>
           <TextInput
-            placeholder="Judul kegiatan"
+            placeholder="Judul"
             value={formData.title}
             onChangeText={text => handleChange('title', text)}
             placeholderTextColor={colors.grey(0.6)}
+            multiline
             style={input.text}
           />
         </View>
-
-        <View style={[input.borderDashed, {minHeight: 100}]}>
+        <View style={[input.borderDashed, {minHeight: 150}]}>
           <TextInput
-            placeholder="Deskripsi kegiatan"
+            placeholder="Deskripsi"
             value={formData.description}
             onChangeText={text => handleChange('description', text)}
             placeholderTextColor={colors.grey(0.6)}
@@ -126,78 +154,106 @@ const AddKomunitasForm = () => {
             style={input.text}
           />
         </View>
-
         <View style={input.borderDashed}>
           <TextInput
-            placeholder="Tanggal upload (cth: Apr 15, 2025)"
+            placeholder="Tanggal Dibuat (YYYY-MM-DD)"
             value={formData.uploadDate}
             onChangeText={text => handleChange('uploadDate', text)}
             placeholderTextColor={colors.grey(0.6)}
             style={input.text}
           />
         </View>
-
         <View style={input.borderDashed}>
           <TextInput
-            placeholder="Tanggal kegiatan"
+            placeholder="Tanggal Pelaksanaan (YYYY-MM-DD)"
             value={formData.eventDate}
             onChangeText={text => handleChange('eventDate', text)}
             placeholderTextColor={colors.grey(0.6)}
             style={input.text}
           />
         </View>
-
         <View style={input.borderDashed}>
           <TextInput
-            placeholder="Tempat kegiatan"
+            placeholder="Lokasi"
             value={formData.location}
             onChangeText={text => handleChange('location', text)}
             placeholderTextColor={colors.grey(0.6)}
             style={input.text}
           />
         </View>
-
         <View style={input.borderDashed}>
           <TextInput
-            placeholder="Kuota peserta (angka saja)"
+            placeholder="Kuota"
             value={formData.quota}
             onChangeText={text => handleChange('quota', text)}
-            keyboardType="numeric"
             placeholderTextColor={colors.grey(0.6)}
+            keyboardType="numeric"
             style={input.text}
           />
         </View>
-
-        <View style={[input.borderDashed, {alignItems: 'center'}]}>
-          {image ? (
-            <Image
-              source={{uri: image}}
-              style={{width: 200, height: 200, marginBottom: 10}}
+        {image ? (
+          <View style={{position: 'relative'}}>
+            <FastImage
+              style={{width: '100%', height: 127, borderRadius: 5}}
+              source={{
+                uri: image,
+                headers: {Authorization: 'someAuthToken'},
+                priority: FastImage.priority.high,
+              }}
+              resizeMode={FastImage.resizeMode.cover}
             />
-          ) : (
-            <Text style={{color: colors.grey(0.6), marginBottom: 10}}>
-              No image selected
-            </Text>
-          )}
-          <TouchableOpacity
-            style={[styles.button, {paddingHorizontal: 30}]}
-            onPress={selectImage}>
-            <Text style={styles.buttonLabel}>Upload Image</Text>
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: -5,
+                right: -5,
+                backgroundColor: colors.blue(),
+                borderRadius: 25,
+              }}
+              onPress={() => setImage(null)}>
+              <Add
+                size={20}
+                variant="Linear"
+                color={colors.white()}
+                style={{transform: [{rotate: '45deg'}]}}
+              />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity onPress={handleImagePick}>
+            <View
+              style={[
+                input.borderDashed,
+                {
+                  gap: 10,
+                  paddingVertical: 30,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                },
+              ]}>
+              <AddSquare color={colors.grey(0.6)} variant="Linear" size={42} />
+              <Text
+                style={{
+                  fontFamily: fontType['Pjs-Regular'],
+                  fontSize: 12,
+                  color: colors.grey(0.6),
+                }}>
+                Upload Thumbnail
+              </Text>
+            </View>
           </TouchableOpacity>
-        </View>
+        )}
       </ScrollView>
-
-      {/* Tombol Upload */}
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.button} onPress={handleUpload}>
           <Text style={styles.buttonLabel}>Upload</Text>
         </TouchableOpacity>
       </View>
-      <Modal visible={loading} animationType="none" transparent>
+      {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.blue()} />
         </View>
-      </Modal>
+      )}
     </View>
   );
 };
@@ -268,5 +324,28 @@ const input = StyleSheet.create({
     fontFamily: fontType['Pjs-Regular'],
     color: colors.black(),
     padding: 0,
+  },
+});
+
+const category = StyleSheet.create({
+  title: {
+    fontFamily: fontType['Pjs-SemiBold'],
+    fontSize: 14,
+    marginBottom: 10,
+    color: colors.black(),
+  },
+  container: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  item: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  name: {
+    fontFamily: fontType['Pjs-Regular'],
+    fontSize: 12,
   },
 });

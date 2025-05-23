@@ -1,11 +1,11 @@
-import React, { useState, useCallback} from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {Animated, View, ImageBackground, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl} from 'react-native';
 import { Edit, Setting2} from 'iconsax-react-native';
 import { fontType, colors } from '../../theme';
 import { blogData } from '../../data';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {formatNumber} from '../../utils/formatNumber';
-import axios from 'axios';
+import { collection, getFirestore, onSnapshot } from '@react-native-firebase/firestore';
 
 const ItemKomunitas = () => {
   const navigation = useNavigation();
@@ -17,35 +17,60 @@ const ItemKomunitas = () => {
   // status untuk menyimpan status refreshing
   const [refreshing, setRefreshing] = useState(false);
   
-  const getDataBlog = async () => {
-    try {
-      // ambil data dari API dengan metode GET
-      const response = await axios.get(
-        'https://682405e465ba058033989a69.mockapi.io/api/detail_komunitas',
-      );
-      // atur state blogData sesuai dengan data yang
-      // di dapatkan dari API
-      setBlogData(response.data);
-      // atur loading menjadi false
-      setLoading(false)
-    } catch (error) {
-        console.error(error);
-    }
-  };
+  // const getDataBlog = async () => {
+  //   try {
+  //     // ambil data dari API dengan metode GET
+  //     const response = await axios.get(
+  //       'https://682405e465ba058033989a69.mockapi.io/api/detail_komunitas',
+  //     );
+  //     // atur state blogData sesuai dengan data yang
+  //     // di dapatkan dari API
+  //     setBlogData(response.data);
+  //     // atur loading menjadi false
+  //     setLoading(false)
+  //   } catch (error) {
+  //       console.error(error);
+  //   }
+  // };
+
+  useEffect(() => {
+    const db = getFirestore();
+    const komunitasRef = collection(db, 'komunitas');
+
+    const subscriber = onSnapshot(komunitasRef, (snapshot) => {
+      const blogs = [];
+      snapshot.forEach((doc) => {
+        blogs.push({
+          ...doc.data(),
+          id: doc.id,
+        });
+      });
+      setBlogData(blogs);
+      setLoading(false);
+    });
+    return () => subscriber();
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
-      getDataBlog()
+      const db = getFirestore();
+      const komunitasRef = collection(db, 'komunitas');
+      onSnapshot(komunitasRef, (snapshot) => {
+        const blogs = [];
+        snapshot.forEach((doc) => {
+          blogs.push({
+            ...doc.data(),
+            id: doc.id,
+          });
+        });
+        setBlogData(blogs);
+        setLoading(false);
+      });
+
       setRefreshing(false);
     }, 1500);
   }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      getDataBlog();
-    }, [])
-  );
 
   const [searchQuery, setSearchQuery] = useState('');
 

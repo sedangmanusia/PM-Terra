@@ -6,7 +6,7 @@ import FastImage from '@d11/react-native-fast-image';
 import {fontType, colors} from '../../theme';
 import {formatNumber} from '../../utils/formatNumber';
 import {formatDate} from '../../utils/formatDate';
-import axios from 'axios';
+import { doc, getFirestore, onSnapshot } from '@react-native-firebase/firestore';
 import ActionSheet from 'react-native-actions-sheet';
 
 const DetailKomunitas = ({route}) => {
@@ -14,7 +14,7 @@ const DetailKomunitas = ({route}) => {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
-
+  
   const actionSheetRef = useRef(null);
   const navigation = useNavigation();
 
@@ -26,49 +26,131 @@ const DetailKomunitas = ({route}) => {
     actionSheetRef.current?.hide();
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      getKomunitasById();
-    }, [communityId])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     getKomunitasById();
+  //   }, [communityId])
+  // );
+  useEffect(() => {
+    const db = getFirestore();
+    const KomunitasRef = doc(db, 'komunitas', communityId);
 
-  const getKomunitasById = async () => {
-    try {
-      // ambil data blog berdasarkan spesifik ID dengan metode GET
-      const response = await axios.get(
-        `https://682405e465ba058033989a69.mockapi.io/api/detail_komunitas/${communityId}`,
-      );
-      // atur state blog berdasarkan response dari API
-      setSelectedBlog(response.data);
-      setLoading(false);
-    } catch (error) {
-      Alert.alert('error', `${error.Message}`);
-    }
-  };
+    const unsub = onSnapshot(KomunitasRef, (documentSnapshot) => {
+      const blogData = documentSnapshot.data();
+      if (blogData) {
+        console.log('Blog data: ', blogData);
+        setSelectedBlog(blogData);
+      } else {
+        console.log(`Blog with ID ${communityId} not found.`);
+      }
+    });
 
+    setLoading(false);
+    return () => unsub();
+  }, [communityId]);
   const navigateEdit = () => {
-    if (selectedBlog && selectedBlog.id) {
-      navigation.navigate('EditBlog', {blogId: selectedBlog.id});
-      closeActionSheet();
-    }
+    closeActionSheet();
+    navigation.navigate('EditBlog', { communityId });
   };
-
   const handleDelete = async () => {
-    if (!selectedBlog || !selectedBlog.id) return;
+    closeActionSheet();
     setLoading(true);
     try {
-      // hapus data blog dengan spesifik ID dengan metode DELETE
-      const response = await axios.delete(`https://681378d5129f6313e2116491.mockapi.io/api/blog/${selectedBlog.id}`);
-      if (response.status == 200) {
-        closeActionSheet();
-        navigation.goBack();
+      const db = getFirestore();
+      const blogRef = doc(db, 'blog', communityId);
+      await blogRef.delete();
+
+      if (selectedBlog?.image) {
+        await fetch(`https://backend-file-praktikum.vercel.app/delete/${selectedBlog.image}`, {
+          method: 'POST',
+        });
       }
+      console.log('Blog deleted!');
+      closeActionSheet();
+      setSelectedBlog(null);
+      setLoading(false)
+      navigation.goBack();
     } catch (error) {
-      Alert.alert('Gagal Menhapus Blog', `${error.Message}`);
-    } finally {
-      setLoading(false);
+      console.error(error);
     }
   };
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const diffClampY = Animated.diffClamp(scrollY, 0, 52);
+  const headerY = diffClampY.interpolate({
+    inputRange: [0, 52],
+    outputRange: [0, -52],
+  });
+  const bottomBarY = diffClampY.interpolate({
+    inputRange: [0, 52],
+    outputRange: [0, 52],
+  });
+
+  const toggleIcon = iconName => {
+    setIconStates(prevStates => ({
+      ...prevStates,
+      [iconName]: {
+        variant: prevStates[iconName].variant === 'Linear' ? 'Bold' : 'Linear',
+        color:
+          prevStates[iconName].variant === 'Linear'
+            ? colors.blue()
+            : colors.grey(0.6),
+      },
+    }));
+  };
+
+  // const getKomunitasById = async () => {
+  //   try {
+  //     // ambil data blog berdasarkan spesifik ID dengan metode GET
+  //     const response = await axios.get(
+  //       `https://682405e465ba058033989a69.mockapi.io/api/detail_komunitas/${communityId}`,
+  //     );
+  //     // atur state blog berdasarkan response dari API
+  //     setSelectedBlog(response.data);
+  //     setLoading(false);
+  //   } catch (error) {
+  //     Alert.alert('error', `${error.Message}`);
+  //   }
+  // };
+
+  // const navigateEdit = () => {
+  //   if (selectedBlog && selectedBlog.id) {
+  //     navigation.navigate('EditBlog', {blogId: selectedBlog.id});
+  //     closeActionSheet();
+  //   }
+  // };
+
+  // const handleDelete = async () => {
+  //   if (!selectedBlog || !selectedBlog.id) return;
+  //   setLoading(true);
+  //   try {
+  //     // hapus data blog dengan spesifik ID dengan metode DELETE
+  //     const response = await axios.delete(`https://681378d5129f6313e2116491.mockapi.io/api/blog/${selectedBlog.id}`);
+  //     if (response.status == 200) {
+  //       closeActionSheet();
+  //       navigation.goBack();
+  //     }
+  //   } catch (error) {
+  //     Alert.alert('Gagal Menhapus Blog', `${error.Message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // if (loading) {
+  //   return (
+  //     <View style={[styles.container, {justifyContent: 'center', alignItems: 'center'}]}>
+  //       <ActivityIndicator size="large" color={colors.darkGreen()} />
+  //     </View>
+  //   );
+  // }
+
+  // if (!selectedBlog) {
+  //   return (
+  //     <View style={[styles.container, {justifyContent: 'center', alignItems: 'center'}]}>
+  //       <Text>Data komunitas tidak ditemukan.</Text>
+  //     </View>
+  //   );
+  // }
 
   if (loading) {
     return (
